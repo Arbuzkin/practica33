@@ -1,5 +1,8 @@
 <script setup>
 import { reactive, ref } from 'vue'
+import axios from 'axios'
+
+const API_URL = 'https://jsonplaceholder.typicode.com/posts'
 
 const isLoading = ref(false)
 const successMessage = ref('')
@@ -127,27 +130,27 @@ const handleSubmit = async (event) => {
     const payload = {
       name: form.name.trim(),
       email: form.email.trim(),
-      password: form.password,
-      confirmPassword: form.confirmPassword
+      password: form.password
     }
 
-    const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    })
+    const { data } = await axios.post(API_URL, payload, { timeout: 10000 })
 
-    if (!response.ok) {
-      throw new Error(`Ошибка сервера: ${response.status}`)
-    }
-
-    const data = await response.json()
     successMessage.value =
       'Регистрация успешно отправлена (демо). Данные: ' + JSON.stringify(data, null, 2)
   } catch (err) {
-    generalError.value = err instanceof Error ? err.message : 'Произошла ошибка при отправке.'
+    if (axios.isAxiosError(err)) {
+      if (err.code === 'ECONNABORTED') {
+        generalError.value = 'Сервер не ответил вовремя. Попробуйте отправить форму ещё раз.'
+      } else if (err.response) {
+        generalError.value = `Ошибка сервера: ${err.response.status}. Попробуйте позже.`
+      } else if (err.request) {
+        generalError.value = 'Не удалось подключиться к серверу. Проверьте интернет-соединение.'
+      } else {
+        generalError.value = 'Ошибка при отправке формы. Попробуйте ещё раз.'
+      }
+    } else {
+      generalError.value = 'Произошла неизвестная ошибка.'
+    }
   } finally {
     isLoading.value = false
   }
