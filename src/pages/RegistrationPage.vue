@@ -8,6 +8,7 @@ const isLoading = ref(false)
 const successMessage = ref('')
 const generalError = ref(null)
 
+// Данные формы
 const form = reactive({
   name: '',
   email: '',
@@ -15,6 +16,7 @@ const form = reactive({
   confirmPassword: ''
 })
 
+// Ошибки валидации
 const errors = reactive({
   name: null,
   email: null,
@@ -22,96 +24,66 @@ const errors = reactive({
   confirmPassword: null
 })
 
-const touched = reactive({
-  name: false,
-  email: false,
-  password: false,
-  confirmPassword: false
-})
-
-const validatePassword = () => {
-  if (!form.password) {
-    return 'Введите пароль.'
+// Валидация. Если передать поле — проверяется только оно (для @blur и @input).
+const validate = (field = null) => {
+  if (!field) {
+    Object.keys(errors).forEach((key) => (errors[key] = null))
   }
 
-  const missing = []
+  let hasErrors = false
 
-  if (form.password.length < 8) {
-    missing.push('минимум 8 символов')
-  }
-  if (!/[a-z]/.test(form.password)) {
-    missing.push('строчную букву')
-  }
-  if (!/[A-Z]/.test(form.password)) {
-    missing.push('прописную букву')
-  }
-  if (!/\d/.test(form.password)) {
-    missing.push('цифру')
-  }
-  if (!/[^A-Za-z0-9]/.test(form.password)) {
-    missing.push('специальный символ')
+  if (!field || field === 'name') {
+    if (!form.name || form.name.trim().length < 2) {
+      errors.name = 'Имя должно быть не короче 2 символов.'
+      hasErrors = true
+    } else {
+      errors.name = null
+    }
   }
 
-  return missing.length ? `Пароль должен содержать: ${missing.join(', ')}.` : null
-}
-
-const validateField = (field) => {
-  if (field === 'name') {
-    errors.name =
-      !form.name || form.name.trim().length < 2
-        ? 'Имя должно быть не короче 2 символов.'
-        : null
-  }
-
-  if (field === 'email') {
+  if (!field || field === 'email') {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-    if (!form.email.trim()) {
-      errors.email = 'Введите email.'
-    } else if (!emailRegex.test(form.email.trim())) {
+    if (!form.email || !emailRegex.test(form.email)) {
       errors.email = 'Введите корректный email.'
+      hasErrors = true
     } else {
       errors.email = null
     }
   }
 
-  if (field === 'password') {
-    errors.password = validatePassword()
+  if (!field || field === 'password') {
+    const password = form.password
 
-    if (touched.confirmPassword) {
-      validateField('confirmPassword')
+    if (!password || password.length < 8) {
+      errors.password = 'Пароль должен быть не короче 8 символов.'
+      hasErrors = true
+    } else if (
+      !/[a-z]/.test(password) ||
+      !/[A-Z]/.test(password) ||
+      !/\d/.test(password) ||
+      !/[^A-Za-z0-9]/.test(password)
+    ) {
+      errors.password = 'Пароль должен содержать строчные и прописные буквы, цифру и специальный символ.'
+      hasErrors = true
+    } else {
+      errors.password = null
     }
   }
 
-  if (field === 'confirmPassword') {
-    if (!form.confirmPassword) {
-      errors.confirmPassword = 'Подтвердите пароль.'
-    } else if (form.confirmPassword !== form.password) {
+  if (!field || field === 'confirmPassword') {
+    if (form.password !== form.confirmPassword) {
       errors.confirmPassword = 'Пароли не совпадают.'
+      hasErrors = true
+    } else if (!form.confirmPassword && form.password) {
+      errors.confirmPassword = 'Подтвердите пароль.'
+      hasErrors = true
     } else {
       errors.confirmPassword = null
     }
   }
-}
 
-const touch = (field) => {
-  touched[field] = true
-  validateField(field)
-}
-
-const handleInput = (field) => {
-  if (touched[field]) {
-    validateField(field)
-  }
-}
-
-const validate = () => {
-  Object.keys(errors).forEach((key) => (errors[key] = null))
-  Object.keys(touched).forEach((key) => (touched[key] = true))
-
-  Object.keys(errors).forEach(validateField)
-
-  return Object.values(errors).every((error) => !error)
+  return !hasErrors
 }
 
 const handleSubmit = async (event) => {
@@ -163,6 +135,7 @@ const handleSubmit = async (event) => {
     <h1>Регистрация</h1>
 
     <form class="registration-form" @submit="handleSubmit">
+      <!-- Имя -->
       <div class="form-group">
         <label for="name">Имя</label>
         <input
@@ -171,12 +144,13 @@ const handleSubmit = async (event) => {
           type="text"
           class="form-input"
           :class="{ 'input-error': errors.name }"
-          @blur="touch('name')"
-          @input="handleInput('name')"
+          @blur="validate('name')"
+          @input="validate('name')"
         />
         <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
       </div>
 
+      <!-- Email -->
       <div class="form-group">
         <label for="email">Email</label>
         <input
@@ -185,12 +159,13 @@ const handleSubmit = async (event) => {
           type="email"
           class="form-input"
           :class="{ 'input-error': errors.email }"
-          @blur="touch('email')"
-          @input="handleInput('email')"
+          @blur="validate('email')"
+          @input="validate('email')"
         />
         <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
       </div>
 
+      <!-- Пароль -->
       <div class="form-group">
         <label for="password">Пароль</label>
         <input
@@ -199,12 +174,13 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.password }"
-          @blur="touch('password')"
-          @input="handleInput('password')"
+          @blur="validate('password')"
+          @input="validate('password')"
         />
         <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
       </div>
 
+      <!-- Подтверждение пароля -->
       <div class="form-group">
         <label for="confirmPassword">Подтверждение пароля</label>
         <input
@@ -213,19 +189,22 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.confirmPassword }"
-          @blur="touch('confirmPassword')"
-          @input="handleInput('confirmPassword')"
+          @blur="validate('confirmPassword')"
+          @input="validate('confirmPassword')"
         />
         <span v-if="errors.confirmPassword" class="error-message">{{ errors.confirmPassword }}</span>
       </div>
 
+      <!-- Общее сообщение об ошибке -->
       <div v-if="generalError" class="general-error">{{ generalError }}</div>
 
+      <!-- Кнопка отправки -->
       <button type="submit" class="btn-submit" :disabled="isLoading">
         {{ isLoading ? 'Отправка...' : 'Зарегистрироваться' }}
       </button>
     </form>
 
+    <!-- Сообщение об успехе -->
     <div v-if="successMessage" class="success-message">
       {{ successMessage }}
     </div>
