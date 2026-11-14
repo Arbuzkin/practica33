@@ -19,6 +19,13 @@ const errors = reactive({
   confirmPassword: null
 })
 
+const touched = reactive({
+  name: false,
+  email: false,
+  password: false,
+  confirmPassword: false
+})
+
 const validatePassword = () => {
   if (!form.password) {
     return 'Введите пароль.'
@@ -45,35 +52,63 @@ const validatePassword = () => {
   return missing.length ? `Пароль должен содержать: ${missing.join(', ')}.` : null
 }
 
+const validateField = (field) => {
+  if (field === 'name') {
+    errors.name =
+      !form.name || form.name.trim().length < 2
+        ? 'Имя должно быть не короче 2 символов.'
+        : null
+  }
+
+  if (field === 'email') {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    if (!form.email.trim()) {
+      errors.email = 'Введите email.'
+    } else if (!emailRegex.test(form.email.trim())) {
+      errors.email = 'Введите корректный email.'
+    } else {
+      errors.email = null
+    }
+  }
+
+  if (field === 'password') {
+    errors.password = validatePassword()
+
+    if (touched.confirmPassword) {
+      validateField('confirmPassword')
+    }
+  }
+
+  if (field === 'confirmPassword') {
+    if (!form.confirmPassword) {
+      errors.confirmPassword = 'Подтвердите пароль.'
+    } else if (form.confirmPassword !== form.password) {
+      errors.confirmPassword = 'Пароли не совпадают.'
+    } else {
+      errors.confirmPassword = null
+    }
+  }
+}
+
+const touch = (field) => {
+  touched[field] = true
+  validateField(field)
+}
+
+const handleInput = (field) => {
+  if (touched[field]) {
+    validateField(field)
+  }
+}
+
 const validate = () => {
   Object.keys(errors).forEach((key) => (errors[key] = null))
-  let hasErrors = false
+  Object.keys(touched).forEach((key) => (touched[key] = true))
 
-  if (!form.name || form.name.trim().length < 2) {
-    errors.name = 'Имя должно быть не короче 2 символов.'
-    hasErrors = true
-  }
+  Object.keys(errors).forEach(validateField)
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!form.email || !emailRegex.test(form.email)) {
-    errors.email = 'Введите корректный email.'
-    hasErrors = true
-  }
-
-  errors.password = validatePassword()
-  if (errors.password) {
-    hasErrors = true
-  }
-
-  if (form.password !== form.confirmPassword) {
-    errors.confirmPassword = 'Пароли не совпадают.'
-    hasErrors = true
-  } else if (!form.confirmPassword && form.password) {
-    errors.confirmPassword = 'Подтвердите пароль.'
-    hasErrors = true
-  }
-
-  return !hasErrors
+  return Object.values(errors).every((error) => !error)
 }
 
 const handleSubmit = async (event) => {
@@ -132,6 +167,8 @@ const handleSubmit = async (event) => {
           type="text"
           class="form-input"
           :class="{ 'input-error': errors.name }"
+          @blur="touch('name')"
+          @input="handleInput('name')"
         />
         <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
       </div>
@@ -144,6 +181,8 @@ const handleSubmit = async (event) => {
           type="email"
           class="form-input"
           :class="{ 'input-error': errors.email }"
+          @blur="touch('email')"
+          @input="handleInput('email')"
         />
         <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
       </div>
@@ -156,6 +195,8 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.password }"
+          @blur="touch('password')"
+          @input="handleInput('password')"
         />
         <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
       </div>
@@ -168,6 +209,8 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.confirmPassword }"
+          @blur="touch('confirmPassword')"
+          @input="handleInput('confirmPassword')"
         />
         <span v-if="errors.confirmPassword" class="error-message">{{ errors.confirmPassword }}</span>
       </div>
