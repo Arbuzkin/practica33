@@ -19,6 +19,32 @@ const errors = reactive({
   confirmPassword: null
 })
 
+const validatePassword = () => {
+  if (!form.password) {
+    return 'Введите пароль.'
+  }
+
+  const missing = []
+
+  if (form.password.length < 8) {
+    missing.push('минимум 8 символов')
+  }
+  if (!/[a-z]/.test(form.password)) {
+    missing.push('строчную букву')
+  }
+  if (!/[A-Z]/.test(form.password)) {
+    missing.push('прописную букву')
+  }
+  if (!/\d/.test(form.password)) {
+    missing.push('цифру')
+  }
+  if (!/[^A-Za-z0-9]/.test(form.password)) {
+    missing.push('специальный символ')
+  }
+
+  return missing.length ? `Пароль должен содержать: ${missing.join(', ')}.` : null
+}
+
 const validate = () => {
   Object.keys(errors).forEach((key) => (errors[key] = null))
   let hasErrors = false
@@ -34,8 +60,8 @@ const validate = () => {
     hasErrors = true
   }
 
-  if (!form.password || form.password.length < 6) {
-    errors.password = 'Пароль должен быть не короче 6 символов.'
+  errors.password = validatePassword()
+  if (errors.password) {
     hasErrors = true
   }
 
