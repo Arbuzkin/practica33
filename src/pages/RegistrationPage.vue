@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue'
 import axios from 'axios'
 
-const API_URL = 'https://jsonplaceholder.typicode.com/posts'
+const API_URL = 'https://typicode.com'
 
 const isLoading = ref(false)
 const successMessage = ref('')
@@ -130,7 +130,8 @@ const handleSubmit = async (event) => {
     const payload = {
       name: form.name.trim(),
       email: form.email.trim(),
-      password: form.password
+      password: form.password,
+      confirmPassword: form.confirmPassword
     }
 
     const { data } = await axios.post(API_URL, payload, { timeout: 10000 })
