@@ -1,8 +1,7 @@
 <script setup>
-import { reactive, ref } from 'vue'
-import axios from 'axios'
-
-const API_URL = 'https://jsonplaceholder.typicode.com/users'
+import { ref, reactive } from 'vue'
+// Если хочешь использовать axios, раскомментируй:
+// import axios from 'axios'
 
 const isLoading = ref(false)
 const successMessage = ref('')
@@ -24,76 +23,52 @@ const errors = reactive({
   confirmPassword: null
 })
 
-// Валидация. Если передать поле — проверяется только оно (для @blur и @input).
-const validate = (field = null) => {
-  if (!field) {
-    Object.keys(errors).forEach((key) => (errors[key] = null))
-  }
-
+// Простая валидация
+const validate = () => {
+  // Сброс ошибок
+  Object.keys(errors).forEach((key) => (errors[key] = null))
   let hasErrors = false
 
-  if (!field || field === 'name') {
-    if (!form.name || form.name.trim().length < 2) {
-      errors.name = 'Имя должно быть не короче 2 символов.'
-      hasErrors = true
-    } else {
-      errors.name = null
-    }
+  // Имя: не пустое, длина >= 2
+  if (!form.name || form.name.trim().length < 2) {
+    errors.name = 'Имя должно быть не короче 2 символов.'
+    hasErrors = true
   }
 
-  if (!field || field === 'email') {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-    if (!form.email || !emailRegex.test(form.email)) {
-      errors.email = 'Введите корректный email.'
-      hasErrors = true
-    } else {
-      errors.email = null
-    }
+  // Email: не пустой, простой формат
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!form.email || !emailRegex.test(form.email)) {
+    errors.email = 'Введите корректный email.'
+    hasErrors = true
   }
 
-  if (!field || field === 'password') {
-    const password = form.password
-
-    if (!password || password.length < 8) {
-      errors.password = 'Пароль должен быть не короче 8 символов.'
-      hasErrors = true
-    } else if (
-      !/[a-z]/.test(password) ||
-      !/[A-Z]/.test(password) ||
-      !/\d/.test(password) ||
-      !/[^A-Za-z0-9]/.test(password)
-    ) {
-      errors.password = 'Пароль должен содержать строчные и прописные буквы, цифру и специальный символ.'
-      hasErrors = true
-    } else {
-      errors.password = null
-    }
+  // Пароль: не пустой, длина >= 6
+  if (!form.password || form.password.length < 6) {
+    errors.password = 'Пароль должен быть не короче 6 символов.'
+    hasErrors = true
   }
 
-  if (!field || field === 'confirmPassword') {
-    if (form.password !== form.confirmPassword) {
-      errors.confirmPassword = 'Пароли не совпадают.'
-      hasErrors = true
-    } else if (!form.confirmPassword && form.password) {
-      errors.confirmPassword = 'Подтвердите пароль.'
-      hasErrors = true
-    } else {
-      errors.confirmPassword = null
-    }
+  // Подтверждение пароля: совпадает с паролем
+  if (form.password !== form.confirmPassword) {
+    errors.confirmPassword = 'Пароли не совпадают.'
+    hasErrors = true
+  } else if (!form.confirmPassword && form.password) {
+    // Если пароль заполнен, а подтверждение пустое
+    errors.confirmPassword = 'Подтвердите пароль.'
+    hasErrors = true
   }
 
   return !hasErrors
 }
 
 const handleSubmit = async (event) => {
-  event.preventDefault()
+  event.preventDefault() // предотвращаем перезагрузку страницы
 
   successMessage.value = ''
   generalError.value = null
 
   if (!validate()) {
-    return
+    return // если есть ошибки валидации — не отправляем
   }
 
   isLoading.value = true
@@ -103,27 +78,28 @@ const handleSubmit = async (event) => {
       name: form.name.trim(),
       email: form.email.trim(),
       password: form.password,
-      confirmPassword: form.confirmPassword
+      confirmPassword: form.confirmPassword // на бэкенд обычно не отправляют confirmPassword
     }
 
-    const { data } = await axios.post(API_URL, payload, { timeout: 10000 })
+    // Вариант 1: fetch (нативно)
+    //api чисто для примера, т.е. тут должна проводиться проверка на бэке
+    const response = await fetch('https://jsonplaceholder.typicode.com/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
 
+    if (!response.ok) {
+      throw new Error(`Ошибка сервера: ${response.status}`)
+    }
+
+    const data = await response.json()
     successMessage.value =
       'Регистрация успешно отправлена (демо). Данные: ' + JSON.stringify(data, null, 2)
   } catch (err) {
-    if (axios.isAxiosError(err)) {
-      if (err.code === 'ECONNABORTED') {
-        generalError.value = 'Сервер не ответил вовремя. Попробуйте отправить форму ещё раз.'
-      } else if (err.response) {
-        generalError.value = `Ошибка сервера: ${err.response.status}. Попробуйте позже.`
-      } else if (err.request) {
-        generalError.value = 'Не удалось подключиться к серверу. Проверьте интернет-соединение.'
-      } else {
-        generalError.value = 'Ошибка при отправке формы. Попробуйте ещё раз.'
-      }
-    } else {
-      generalError.value = 'Произошла неизвестная ошибка.'
-    }
+    generalError.value = err instanceof Error ? err.message : 'Произошла ошибка при отправке.'
   } finally {
     isLoading.value = false
   }
@@ -134,7 +110,7 @@ const handleSubmit = async (event) => {
   <div class="form-page">
     <h1>Регистрация</h1>
 
-    <form class="registration-form" @submit="handleSubmit">
+    <form @submit="handleSubmit" class="registration-form">
       <!-- Имя -->
       <div class="form-group">
         <label for="name">Имя</label>
@@ -144,8 +120,6 @@ const handleSubmit = async (event) => {
           type="text"
           class="form-input"
           :class="{ 'input-error': errors.name }"
-          @blur="validate('name')"
-          @input="validate('name')"
         />
         <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
       </div>
@@ -159,8 +133,6 @@ const handleSubmit = async (event) => {
           type="email"
           class="form-input"
           :class="{ 'input-error': errors.email }"
-          @blur="validate('email')"
-          @input="validate('email')"
         />
         <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
       </div>
@@ -174,8 +146,6 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.password }"
-          @blur="validate('password')"
-          @input="validate('password')"
         />
         <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
       </div>
@@ -189,8 +159,6 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.confirmPassword }"
-          @blur="validate('confirmPassword')"
-          @input="validate('confirmPassword')"
         />
         <span v-if="errors.confirmPassword" class="error-message">{{ errors.confirmPassword }}</span>
       </div>
