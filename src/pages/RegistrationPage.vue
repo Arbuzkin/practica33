@@ -120,6 +120,7 @@ const handleSubmit = async (event) => {
           type="text"
           class="form-input"
           :class="{ 'input-error': errors.name }"
+          @blur="validate"
         />
         <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
       </div>
@@ -133,6 +134,7 @@ const handleSubmit = async (event) => {
           type="email"
           class="form-input"
           :class="{ 'input-error': errors.email }"
+          @blur="validate"
         />
         <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
       </div>
@@ -146,6 +148,7 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.password }"
+          @blur="validate"
         />
         <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
       </div>
@@ -159,6 +162,7 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.confirmPassword }"
+          @blur="validate"
         />
         <span v-if="errors.confirmPassword" class="error-message">{{ errors.confirmPassword }}</span>
       </div>
