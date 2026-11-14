@@ -158,3 +158,90 @@ const handleSubmit = async (event) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.form-page {
+  max-width: 420px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+h1 {
+  margin: 0 0 20px;
+  font-size: 24px;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.input-error {
+  border-color: #d93025;
+}
+
+.error-message {
+  display: block;
+  margin-top: 4px;
+  color: #d93025;
+  font-size: 13px;
+}
+
+.general-error {
+  margin-bottom: 16px;
+  padding: 8px 10px;
+  color: #d93025;
+  background: #fdecea;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  color: #fff;
+  background: #4a90e2;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-submit:disabled {
+  background: #9bbfe8;
+  cursor: not-allowed;
+}
+
+.success-message {
+  margin-top: 16px;
+  padding: 10px;
+  color: #1e7e34;
+  background: #e7f5ea;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+</style>
