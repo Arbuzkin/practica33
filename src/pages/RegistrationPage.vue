@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue'
 import axios from 'axios'
 
-const API_URL = 'https://typicode.com'
+const API_URL = 'https://jsonplaceholder.typicode.com/users'
 
 const isLoading = ref(false)
 const successMessage = ref('')
