@@ -61,6 +61,15 @@ const validate = () => {
   return !hasErrors
 }
 
+const validateField = (field) => {
+  validate()
+  Object.keys(errors).forEach((key) => {
+    if (key !== field) {
+      errors[key] = null
+    }
+  })
+}
+
 const handleSubmit = async (event) => {
   event.preventDefault() // предотвращаем перезагрузку страницы
 
@@ -120,7 +129,7 @@ const handleSubmit = async (event) => {
           type="text"
           class="form-input"
           :class="{ 'input-error': errors.name }"
-          @blur="validate"
+          @blur="validateField('name')"
         />
         <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
       </div>
@@ -134,7 +143,7 @@ const handleSubmit = async (event) => {
           type="email"
           class="form-input"
           :class="{ 'input-error': errors.email }"
-          @blur="validate"
+          @blur="validateField('email')"
         />
         <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
       </div>
@@ -148,7 +157,7 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.password }"
-          @blur="validate"
+          @blur="validateField('password')"
         />
         <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
       </div>
@@ -162,7 +171,7 @@ const handleSubmit = async (event) => {
           type="password"
           class="form-input"
           :class="{ 'input-error': errors.confirmPassword }"
-          @blur="validate"
+          @blur="validateField('confirmPassword')"
         />
         <span v-if="errors.confirmPassword" class="error-message">{{ errors.confirmPassword }}</span>
       </div>
